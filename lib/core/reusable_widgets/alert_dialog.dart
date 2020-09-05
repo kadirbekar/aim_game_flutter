@@ -11,26 +11,29 @@ class ShowCustomDialogBox {
   }) {
     return showDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (context) => Stack(
-        children: [
-          Container(
-            child: AlertDialog(
-              content: LabelText(
-                text: content,
-              ),
-              title: Text(title),
-              actions: [
-                OutlineButton(
-                  onPressed: rightButtonOnPressed,
-                  child: LabelText(
-                    text: 'Accept',
-                  ),
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () => Future.value(false),
+        child: Stack(
+          children: [
+            Container(
+              child: AlertDialog(
+                content: LabelText(
+                  text: content,
                 ),
-              ],
+                title: Text(title),
+                actions: [
+                  OutlineButton(
+                    onPressed: rightButtonOnPressed,
+                    child: LabelText(
+                      text: 'Accept',
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../../core/constants/image_constants.dart';
 import '../../core/reusable_widgets/alert_dialog.dart';
 import '../../core/reusable_widgets/label_text.dart';
+import 'home_page.dart';
 
 class GamePage extends StatefulWidget {
   final String userName;
@@ -23,15 +26,15 @@ class GamePage extends StatefulWidget {
 
 class _GamePageState extends State<GamePage>
     with SingleTickerProviderStateMixin {
-  double width = 50;
-  double height = 50;
+  double width = 96;
+  double height = 96;
   Color color = Colors.green;
   BorderRadius borderRadius = BorderRadius.circular(8);
   double fontSize = 16.0;
   Color fontColor = Colors.red;
   List<AlignmentGeometry> positions;
   Alignment alignment;
-  var random;
+  Random random;
   int point = 0;
   bool isStarted = false;
   Timer timer;
@@ -99,63 +102,57 @@ class _GamePageState extends State<GamePage>
 
   @override
   Widget build(BuildContext context) {
-    print("sayfa tekrar build edildi");
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-
-        print("test");
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: LabelText(
-            text: widget.userName,
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+          child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: LabelText(
+              text: widget.userName,
+            ),
+            actions: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
+                child: Row(
+                  children: [
+                    const LabelText(text: "Total Point : "),
+                    LabelText(
+                      text: "$point",
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-              child: Row(
-                children: [
-                  const LabelText(text: "Total Point : "),
-                  LabelText(
-                    text: "$point",
-                  ),
-                ],
+          floatingActionButton: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              stopAnimation,
+              const SizedBox(
+                height: 15,
               ),
-            ),
-          ],
-        ),
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            stopAnimation,
-            const SizedBox(
-              height: 15,
-            ),
-            if (startAnimationButtonVisible) startGame,
-          ],
-        ),
-        body: Stack(
-          alignment: alignment,
-          children: [
-            Positioned(
-              height: height,
-              width: width,
-              child: GestureDetector(
-                onTap: () {
-                  if (!startAnimationButtonVisible)
-                    setState(
-                      () {
-                        point++;
-
-                        print("CURRENT POINT : " + point.toString());
-                      },
-                    );
-                },
-                child: aimGameBox,
+              if (startAnimationButtonVisible) startGame,
+            ],
+          ),
+          body: Stack(
+            alignment: alignment,
+            children: [
+              Positioned(
+                height: height,
+                width: width,
+                child: GestureDetector(
+                  onTap: () {
+                    if (!startAnimationButtonVisible) setState(() => point++);
+                  },
+                  child: aimGameBox,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -168,7 +165,7 @@ class _GamePageState extends State<GamePage>
 
   Widget get aimBoxText => Container(
         child: Image.asset(
-          "assets/images/target.png",
+          ImageConstants.TARGET,
           fit: BoxFit.cover,
         ),
       );
@@ -186,7 +183,9 @@ class _GamePageState extends State<GamePage>
             context: context,
             title: 'Game Over',
             content: 'Your point is : $point',
-            rightButtonOnPressed: () {},
+            rightButtonOnPressed: () {
+              Get.offAll(HomePage());
+            },
           );
         },
         label: const LabelText(

@@ -1,5 +1,9 @@
+import 'package:aim_master/core/controllers/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:get/get.dart';
+import 'package:get/state_manager.dart';
+import 'package:get_storage/get_storage.dart';
 
 import '../../core/extensions/context_extension.dart';
 import '../../core/mixin/form_validation.dart';
@@ -36,79 +40,107 @@ class _HomePageState extends State<HomePage> with FormValidation {
 
   bool autoValidate = false;
 
+  GetStorage themeStorage;
+
+  bool isDark = false;
+
   @override
   void initState() {
     super.initState();
+    themeStorage = GetStorage();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
-      child: Scaffold(
-        appBar: appbar,
-        body: Center(
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              Container(
-                padding: context.paddingLow,
-                alignment: Alignment.center,
-                child: Form(
-                  key: _formKey,
-                  autovalidate: autoValidate,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      userNameTextFormField,
-                      SizedBox(height: context.mediumValue,),
-                      const LabelText(text: 'Pick up a number',),
-                      SizedBox(height: context.mediumValue,),
-                      slider,
-                      SizedBox(height: context.mediumValue,),
-                      const LabelText(text: 'Game Level',),
-                      SizedBox(height: context.mediumValue,),
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            const LabelText(
-                              text: 'Low',
-                            ),
-                            lowCheckBox,
-                            const LabelText(
-                              text: 'Medium',
-                            ),
-                            mediumCheckBox,
-                            const LabelText(
-                              text: 'Hard',
-                            ),
-                            hardLevelCheckBox,
-                          ],
+    return GetBuilder<ThemeController>(
+      init: ThemeController(),
+      builder: (themeValue) => GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            actions: [
+              IconButton(
+                icon: Icon(Icons.change_history),
+                onPressed: () async {
+                  isDark = await themeStorage.read("theme");
+                  themeValue.setThemeMode(!isDark);
+                  Get.changeTheme(themeStorage.read("theme") ? ThemeData.dark() : ThemeData.light());
+                },
+              )
+            ],
+            centerTitle: true,
+            title: const LabelText(
+              text: 'Aim Game',
+            ),
+          ),
+          body: Center(
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Container(
+                  padding: context.paddingLow,
+                  alignment: Alignment.center,
+                  child: Form(
+                    key: _formKey,
+                    autovalidate: autoValidate,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        userNameTextFormField,
+                        SizedBox(
+                          height: context.mediumValue,
                         ),
-                      ),
-                      const SizedBox(height: 30),
-                      startGameButton,
-                    ],
+                        LabelText(
+                          text: 'Pick up a number',
+                        ),
+                        SizedBox(
+                          height: context.mediumValue,
+                        ),
+                        slider,
+                        SizedBox(
+                          height: context.mediumValue,
+                        ),
+                        const LabelText(
+                          text: 'Game Level',
+                        ),
+                        SizedBox(
+                          height: context.mediumValue,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              const LabelText(
+                                text: 'Low',
+                              ),
+                              lowCheckBox,
+                              const LabelText(
+                                text: 'Medium',
+                              ),
+                              mediumCheckBox,
+                              const LabelText(
+                                text: 'Hard',
+                              ),
+                              hardLevelCheckBox,
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        startGameButton,
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
-  Widget get appbar => AppBar(
-        centerTitle: true,
-        title: const LabelText(
-          text: 'Aim Game',
-        ),
-      );
 
   Widget get userNameTextFormField => MyTextFormField(
         label: 'Username',
