@@ -10,7 +10,6 @@ void main() async {
   //initialize get storage
   await GetStorage.init();
 
-  //Get.put<ThemeController>(ThemeController());
   final storage = GetStorage();
   if (await storage.read("theme") == null) {
     await storage.write("theme", false);

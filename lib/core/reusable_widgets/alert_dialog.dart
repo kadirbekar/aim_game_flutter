@@ -3,12 +3,7 @@ import 'package:flutter/material.dart';
 import 'label_text.dart';
 
 class ShowCustomDialogBox {
-  static Future showAlertDialogWithAction({
-    BuildContext context,
-    String title,
-    String content,
-    Function rightButtonOnPressed,
-  }) {
+  static Future showAlertDialogWithAction({BuildContext context,String title,String content,Function rightButtonOnPressed,}) {
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -25,7 +20,7 @@ class ShowCustomDialogBox {
                 actions: [
                   OutlineButton(
                     onPressed: rightButtonOnPressed,
-                    child: LabelText(
+                    child: const LabelText(
                       text: 'Accept',
                     ),
                   ),

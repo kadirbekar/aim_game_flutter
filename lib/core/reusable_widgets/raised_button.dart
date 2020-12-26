@@ -1,4 +1,3 @@
-import 'package:aim_master/core/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 
 class DefaultRaisedButton extends StatelessWidget {
@@ -25,9 +24,11 @@ class DefaultRaisedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     return Container(
-      height: context.height * 0.09,
-      width: context.width * 0.85,
+      height: height * 0.07,
+      width: width * 0.60,
       child: RaisedButton(
         color: this.color ?? Colors.teal,
         shape: RoundedRectangleBorder(

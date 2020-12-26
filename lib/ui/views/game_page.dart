@@ -11,21 +11,20 @@ import 'home_page.dart';
 
 class GamePage extends StatefulWidget {
   final String userName;
-  final int aimBoxDuration;
-  final int gameLevelDuration;
+  final int gameEndTime;
+  final int targetMovementSpeed;
   GamePage({
     Key key,
     this.userName,
-    this.aimBoxDuration,
-    this.gameLevelDuration,
+    this.gameEndTime,
+    this.targetMovementSpeed,
   }) : super(key: key);
 
   @override
   _GamePageState createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage>
-    with SingleTickerProviderStateMixin {
+class _GamePageState extends State<GamePage> {
   double width = 96;
   double height = 96;
   Color color = Colors.green;
@@ -36,9 +35,11 @@ class _GamePageState extends State<GamePage>
   Alignment alignment;
   Random random;
   int point = 0;
-  bool isStarted = false;
   Timer timer;
+  Timer changeTargetPosition;
   bool startAnimationButtonVisible = true;
+  final randomInt = 256;
+  int endTime;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _GamePageState extends State<GamePage>
     random = Random();
     initializePositions();
     alignment = positions[6];
+    endTime = widget.gameEndTime;
   }
 
   //set aim box positions
@@ -63,35 +65,39 @@ class _GamePageState extends State<GamePage>
     ];
   }
 
-  //start animation
-  //Duration, animasyonun oynatma hızını belirliyor.
   startAnimation() {
-    timer = Timer.periodic(Duration(milliseconds: widget.gameLevelDuration),
-        (timer) {
-      setState(() {
-        alignment = positions[random.nextInt(6).toInt()];
+    timer = Timer.periodic(Duration(milliseconds: widget.targetMovementSpeed),(timer) {
+      if (timer.tick != widget.gameEndTime) {
+        setState(() {
+          endTime--;
 
-        width = random.nextInt(300).toDouble();
-        height = random.nextInt(300).toDouble();
+          alignment = positions[random.nextInt(6).toInt()];
 
-        color = Color.fromRGBO(
-          random.nextInt(256),
-          random.nextInt(256),
-          random.nextInt(256),
-          1,
-        );
+          width = random.nextInt(300).toDouble();
+          height = random.nextInt(300).toDouble();
 
-        borderRadius = BorderRadius.circular(random.nextInt(25).toDouble());
+          color = Color.fromRGBO(
+            random.nextInt(randomInt),
+            random.nextInt(randomInt),
+            random.nextInt(randomInt),
+            1,
+          );
 
-        fontSize = random.nextInt(30).toDouble();
+          borderRadius = BorderRadius.circular(random.nextInt(25).toDouble());
 
-        fontColor = Color.fromRGBO(
-          random.nextInt(256),
-          random.nextInt(256),
-          random.nextInt(256),
-          1,
-        );
-      });
+          fontSize = random.nextInt(30).toDouble();
+
+          fontColor = Color.fromRGBO(
+            random.nextInt(randomInt),
+            random.nextInt(randomInt),
+            random.nextInt(randomInt),
+            1,
+          );
+        });
+      } else {
+        _showResultDialog();
+        timer.cancel();
+      }
     });
   }
 
@@ -104,12 +110,11 @@ class _GamePageState extends State<GamePage>
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () => Future.value(false),
-          child: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
           appBar: AppBar(
+            backgroundColor: Colors.teal,
             title: LabelText(
               text: widget.userName,
             ),
@@ -117,11 +122,12 @@ class _GamePageState extends State<GamePage>
               Padding(
                 padding:
                     const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const LabelText(text: "Total Point : "),
+                    LabelText(text: "Total Point : $point"),
                     LabelText(
-                      text: "$point",
+                      text: "Game end time : $endTime",
                     ),
                   ],
                 ),
@@ -131,7 +137,7 @@ class _GamePageState extends State<GamePage>
           floatingActionButton: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              stopAnimation,
+              if (!startAnimationButtonVisible) stopAnimation,
               const SizedBox(
                 height: 15,
               ),
@@ -159,9 +165,10 @@ class _GamePageState extends State<GamePage>
   }
 
   Widget get appbar => AppBar(
-          title: LabelText(
-        text: "Aim Game",
-      ));
+        title: const LabelText(
+          text: "Aim Game",
+        ),
+      );
 
   Widget get aimBoxText => Container(
         child: Image.asset(
@@ -179,32 +186,21 @@ class _GamePageState extends State<GamePage>
         ),
         onPressed: () {
           timer.cancel();
-          ShowCustomDialogBox.showAlertDialogWithAction(
-            context: context,
-            title: 'Game Over',
-            content: 'Your point is : $point',
-            rightButtonOnPressed: () {
-              Get.offAll(HomePage());
-            },
-          );
+          _showResultDialog();
         },
-        label: const LabelText(
-          text: 'Stop',
-        ),
+        label: const LabelText(text: 'Stop'),
       );
 
   Widget get startGame => FloatingActionButton.extended(
         heroTag: 'start',
         onPressed: () {
-          setState(() {
-            startAnimation();
-            startAnimationButtonVisible = false;
-          });
+          startAnimation();
+          startAnimationButtonVisible = false;
         },
         label: const LabelText(
           text: 'Start',
         ),
-        icon: Icon(Icons.play_circle_filled),
+        icon: const Icon(Icons.play_circle_filled),
       );
 
   Widget get aimGameBox => AnimatedContainer(
@@ -215,9 +211,16 @@ class _GamePageState extends State<GamePage>
           color: color,
           borderRadius: borderRadius,
         ),
-        duration: Duration(
-          milliseconds: widget.aimBoxDuration,
-        ),
+        duration: Duration(seconds: widget.targetMovementSpeed),
         curve: Curves.easeIn,
       );
+
+  _showResultDialog() {
+    ShowCustomDialogBox.showAlertDialogWithAction(
+      context: context,
+      title: 'Game Over',
+      content: 'Your point is : $point',
+      rightButtonOnPressed: () => Get.offAll(HomePage()),
+    );
+  }
 }

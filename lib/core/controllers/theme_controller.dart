@@ -5,12 +5,12 @@ class ThemeController extends GetxController  {
   final storage = GetStorage();
 
   //change current theme
-  Future<void> setThemeMode(bool themeValue) async {
+  Future<void> saveTheme(bool themeValue) async {
     if(themeValue == false) {
       await storage.write("theme", themeValue);
     } else {
       await storage.write("theme", themeValue);
     }
-    update(); // update ui like notifyListeners();
+    update(); //  == notifyListeners();
   }
 }

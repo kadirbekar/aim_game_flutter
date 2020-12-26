@@ -13,6 +13,8 @@ class LabelText extends StatelessWidget {
           fontWeight: FontWeight.w700,
           fontSize: 17.5,
         ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
       ),
     );
   }

@@ -1,11 +1,12 @@
-import 'package:aim_master/core/controllers/theme_controller.dart';
+import '../../core/controllers/theme_controller.dart';
+import '../../core/reusable_widgets/check_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:get/state_manager.dart';
 import 'package:get_storage/get_storage.dart';
 
-import '../../core/extensions/context_extension.dart';
+
 import '../../core/mixin/form_validation.dart';
 import '../../core/reusable_widgets/label_text.dart';
 import '../../core/reusable_widgets/raised_button.dart';
@@ -18,61 +19,48 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with FormValidation {
-  final TextEditingController _controller =
-      TextEditingController(text: 'Kadir');
+  final TextEditingController _usernameController = TextEditingController(text: "Kadir");
 
   final _formKey = GlobalKey<FormState>();
 
-  double sliderValue = 12.0;
+  final double _min = 10;
+  final double _max = 60;
 
-  final double maxGameFastRange = 50;
+  int _gameEndTime = 10;
 
-  final int divisionOfSlider = 49;
-  int durationValue = 1200;
+  bool _lowLevel = true;
+  bool _mediumLevel = false;
+  bool _hardLevel = false;
 
-  int time;
+  int _targetMovementSpeed = 750;
 
-  bool lowLevel = true;
-  bool mediumLevel = false;
-  bool hardLevel = false;
+  bool _isDark = false;
 
-  int gameLevelDuration = 1050;
-
-  bool autoValidate = false;
-
-  GetStorage themeStorage;
-
-  bool isDark = false;
-
-  @override
-  void initState() {
-    super.initState();
-    themeStorage = GetStorage();
-  }
+  AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
   @override
   Widget build(BuildContext context) {
+    final themeStorage = GetStorage();
     return GetBuilder<ThemeController>(
       init: ThemeController(),
       builder: (themeValue) => GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
+        onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
           appBar: AppBar(
+            backgroundColor: Colors.teal,
             actions: [
               IconButton(
-                icon: Icon(Icons.change_history),
+                icon: Icon(themeStorage.read("theme") ? Icons.lightbulb : Icons.lightbulb_outline),
                 onPressed: () async {
-                  isDark = await themeStorage.read("theme");
-                  themeValue.setThemeMode(!isDark);
+                  _isDark = await themeStorage.read("theme");
+                  themeValue.saveTheme(!_isDark);
                   Get.changeTheme(themeStorage.read("theme") ? ThemeData.dark() : ThemeData.light());
                 },
-              )
+              ),
             ],
             centerTitle: true,
             title: const LabelText(
-              text: 'Aim Game',
+              text: 'Aim Game'
             ),
           ),
           body: Center(
@@ -80,34 +68,19 @@ class _HomePageState extends State<HomePage> with FormValidation {
               shrinkWrap: true,
               children: [
                 Container(
-                  padding: context.paddingLow,
+                  padding: const EdgeInsets.all(12),
                   alignment: Alignment.center,
                   child: Form(
                     key: _formKey,
-                    autovalidate: autoValidate,
+                    autovalidateMode: autovalidateMode,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         userNameTextFormField,
-                        SizedBox(
-                          height: context.mediumValue,
-                        ),
-                        LabelText(
-                          text: 'Pick up a number',
-                        ),
-                        SizedBox(
-                          height: context.mediumValue,
-                        ),
+                        SizedBox(height: 20,),
+                        const LabelText(text: 'Game end time (second)'),
                         slider,
-                        SizedBox(
-                          height: context.mediumValue,
-                        ),
-                        const LabelText(
-                          text: 'Game Level',
-                        ),
-                        SizedBox(
-                          height: context.mediumValue,
-                        ),
+                        const LabelText(text: 'Game Level'),
                         Padding(
                           padding: const EdgeInsets.all(12),
                           child: Row(
@@ -128,7 +101,6 @@ class _HomePageState extends State<HomePage> with FormValidation {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 30),
                         startGameButton,
                       ],
                     ),
@@ -145,78 +117,62 @@ class _HomePageState extends State<HomePage> with FormValidation {
   Widget get userNameTextFormField => MyTextFormField(
         label: 'Username',
         fontWeight: FontWeight.bold,
-        prefixIcon: Icon(Icons.account_circle),
+        prefixIcon: Icon(Icons.star),
         validationFunction: checkString,
-        lineCount: 1,
-        controller: _controller,
+        controller: _usernameController,
       );
 
   Widget get slider => Slider(
-        value: sliderValue,
-        onChanged: (value) {
-          setState(() {
-            sliderValue = value;
-          });
-        },
+        min: _min,   
+        value: _gameEndTime.toDouble(),
+        onChanged: (value) => setState(() => _gameEndTime = value.toInt()),
         activeColor: Colors.red,
-        label: sliderValue.floor().toString(),
-        max: maxGameFastRange,
-        divisions: divisionOfSlider,
+        label: _gameEndTime.floor().toString(),
+        max: _max,
+        divisions: 5,
         inactiveColor: Colors.white,
         mouseCursor: MouseCursor.defer,
-        onChangeStart: (value) {
-          setState(() {
-            sliderValue = value;
-            durationValue = sliderValue.toInt();
-            print("Duration value " + durationValue.toString().split(".")[0]);
-            durationValue *= 100;
-            print(durationValue);
-          });
-        },
-        onChangeEnd: (value) {
-          setState(() {
-            sliderValue = value;
-          });
-        },
+        onChangeStart: (value) => setState(() => _gameEndTime = value.toInt()),
+        onChangeEnd: (value) => setState(() => _gameEndTime = value.toInt()),
       );
 
-  Widget get lowCheckBox => Checkbox(
-        value: lowLevel,
+  Widget get lowCheckBox => DefaultCheckBox(
+        value: _lowLevel,
         onChanged: (value) {
           setState(() {
-            if (!lowLevel && mediumLevel || hardLevel) {
-              lowLevel = value;
-              mediumLevel = false;
-              hardLevel = false;
-              gameLevelDuration = 840;
+            if (!_lowLevel && _mediumLevel || _hardLevel) {
+              _lowLevel = value;
+              _mediumLevel = false;
+              _hardLevel = false;
+              _targetMovementSpeed = 750;
             }
           });
         },
       );
 
-  Widget get mediumCheckBox => Checkbox(
-        value: mediumLevel,
+  Widget get mediumCheckBox => DefaultCheckBox(
+        value: _mediumLevel,
         onChanged: (value) {
           setState(() {
-            if (!mediumLevel || lowLevel || hardLevel) {
-              mediumLevel = value;
-              lowLevel = false;
-              hardLevel = false;
-              gameLevelDuration = 560;
+            if (!_mediumLevel || _lowLevel || _hardLevel) {
+              _mediumLevel = value;
+              _lowLevel = false;
+              _hardLevel = false;
+              _targetMovementSpeed = 550;
             }
           });
         },
       );
 
-  Widget get hardLevelCheckBox => Checkbox(
-        value: hardLevel,
+  Widget get hardLevelCheckBox => DefaultCheckBox(
+        value: _hardLevel,
         onChanged: (value) {
           setState(() {
-            if (!hardLevel || mediumLevel || lowLevel) {
-              hardLevel = value;
-              mediumLevel = false;
-              lowLevel = false;
-              gameLevelDuration = 280;
+            if (!_hardLevel || _mediumLevel || _lowLevel) {
+              _hardLevel = value;
+              _mediumLevel = false;
+              _lowLevel = false;
+              _targetMovementSpeed = 350;
             }
           });
         },
@@ -224,27 +180,33 @@ class _HomePageState extends State<HomePage> with FormValidation {
 
   Widget get startGameButton => DefaultRaisedButton(
         onPressed: () {
-          autoValidate = true;
+          autovalidateMode = AutovalidateMode.always;
           if (_formKey.currentState.validate()) {
             _formKey.currentState.save();
-            if (lowLevel ||
-                mediumLevel ||
-                hardLevel &&
-                    durationValue != null &&
-                    gameLevelDuration != null) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => GamePage(
-                    userName: _controller.text,
-                    aimBoxDuration: durationValue,
-                    gameLevelDuration: gameLevelDuration,
-                  ),
-                ),
-              );
+            if ((_lowLevel || _mediumLevel || _hardLevel) && _usernameController.text.length > 0) {
+              Get.off(GamePage(
+                  userName: _usernameController.text,
+                  gameEndTime: _gameEndTime,
+                  targetMovementSpeed: _targetMovementSpeed,
+              ),);
             }
+          } else {
+            _showSnackBar();
           }
+          setState((){});
         },
         label: 'Start',
       );
+
+  _showSnackBar(){
+    Get.snackbar("Error", "Please fill all fields",
+      duration: const Duration(seconds: 2),
+      colorText: Colors.black,
+      snackPosition: SnackPosition.BOTTOM,
+      icon: const Icon(Icons.error,color: Colors.red,size: 25,),
+      isDismissible: true,
+      margin: const EdgeInsets.all(12),
+      maxWidth: double.infinity
+    );
+  }
 }
