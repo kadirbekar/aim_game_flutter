@@ -1,16 +1,7 @@
-# aim_master
+# Aim Master Game
 
-A new Flutter project.
+![home_page_light](https://user-images.githubusercontent.com/34074484/103175756-73739a80-487d-11eb-82f7-75031957ee78.png)
+![home_page_dark](https://user-images.githubusercontent.com/34074484/103175758-74a4c780-487d-11eb-9ec8-6a4046d63876.png)
+![start_game](https://user-images.githubusercontent.com/34074484/103175762-77072180-487d-11eb-829b-2c0c96cde467.png)
+![finished_game](https://user-images.githubusercontent.com/34074484/103175763-79697b80-487d-11eb-9ed2-748c2dfea691.png)
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
