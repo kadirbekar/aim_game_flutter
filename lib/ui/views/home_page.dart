@@ -1,3 +1,5 @@
+import '../../core/constants/app_constants.dart';
+
 import '../../core/controllers/theme_controller.dart';
 import '../../core/reusable_widgets/check_box.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +7,6 @@ import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:get/state_manager.dart';
 import 'package:get_storage/get_storage.dart';
-
 
 import '../../core/mixin/form_validation.dart';
 import '../../core/reusable_widgets/label_text.dart';
@@ -19,7 +20,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with FormValidation {
-  final TextEditingController _usernameController = TextEditingController(text: "Kadir");
+  final TextEditingController _usernameController =  TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -32,7 +33,7 @@ class _HomePageState extends State<HomePage> with FormValidation {
   bool _mediumLevel = false;
   bool _hardLevel = false;
 
-  int _targetMovementSpeed = 750;
+  int _targetMovementSpeed = 850;
 
   bool _isDark = false;
 
@@ -50,18 +51,20 @@ class _HomePageState extends State<HomePage> with FormValidation {
             backgroundColor: Colors.teal,
             actions: [
               IconButton(
-                icon: Icon(themeStorage.read("theme") ? Icons.lightbulb : Icons.lightbulb_outline),
+                icon: Icon(themeStorage.read(ApplicationConstants.APP_THEME)
+                    ? Icons.lightbulb
+                    : Icons.lightbulb_outline),
                 onPressed: () async {
-                  _isDark = await themeStorage.read("theme");
+                  _isDark = await themeStorage.read(ApplicationConstants.APP_THEME);
                   themeValue.saveTheme(!_isDark);
-                  Get.changeTheme(themeStorage.read("theme") ? ThemeData.dark() : ThemeData.light());
+                  Get.changeTheme(themeStorage.read(ApplicationConstants.APP_THEME)
+                      ? ThemeData.dark()
+                      : ThemeData.light());
                 },
               ),
             ],
             centerTitle: true,
-            title: const LabelText(
-              text: 'Aim Game'
-            ),
+            title: const LabelText(text: 'Aim Game'),
           ),
           body: Center(
             child: ListView(
@@ -77,7 +80,7 @@ class _HomePageState extends State<HomePage> with FormValidation {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         userNameTextFormField,
-                        SizedBox(height: 20,),
+                        const SizedBox(height: 20),
                         const LabelText(text: 'Game end time (second)'),
                         slider,
                         const LabelText(text: 'Game Level'),
@@ -123,7 +126,7 @@ class _HomePageState extends State<HomePage> with FormValidation {
       );
 
   Widget get slider => Slider(
-        min: _min,   
+        min: _min,
         value: _gameEndTime.toDouble(),
         onChanged: (value) => setState(() => _gameEndTime = value.toInt()),
         activeColor: Colors.red,
@@ -144,7 +147,7 @@ class _HomePageState extends State<HomePage> with FormValidation {
               _lowLevel = value;
               _mediumLevel = false;
               _hardLevel = false;
-              _targetMovementSpeed = 750;
+              _targetMovementSpeed = 850;
             }
           });
         },
@@ -158,7 +161,7 @@ class _HomePageState extends State<HomePage> with FormValidation {
               _mediumLevel = value;
               _lowLevel = false;
               _hardLevel = false;
-              _targetMovementSpeed = 550;
+              _targetMovementSpeed = 525;
             }
           });
         },
@@ -184,29 +187,34 @@ class _HomePageState extends State<HomePage> with FormValidation {
           if (_formKey.currentState.validate()) {
             _formKey.currentState.save();
             if ((_lowLevel || _mediumLevel || _hardLevel) && _usernameController.text.length > 0) {
-              Get.off(GamePage(
+              Get.off(
+                GamePage(
                   userName: _usernameController.text,
                   gameEndTime: _gameEndTime,
                   targetMovementSpeed: _targetMovementSpeed,
-              ),);
+                ),
+              );
             }
           } else {
             _showSnackBar();
           }
-          setState((){});
+          setState(() {});
         },
         label: 'Start',
       );
 
-  _showSnackBar(){
+  _showSnackBar() {
     Get.snackbar("Error", "Please fill all fields",
-      duration: const Duration(seconds: 2),
-      colorText: Colors.black,
-      snackPosition: SnackPosition.BOTTOM,
-      icon: const Icon(Icons.error,color: Colors.red,size: 25,),
-      isDismissible: true,
-      margin: const EdgeInsets.all(12),
-      maxWidth: double.infinity
-    );
+        duration: const Duration(seconds: 2),
+        colorText: Colors.black,
+        snackPosition: SnackPosition.BOTTOM,
+        icon: const Icon(
+          Icons.error,
+          color: Colors.red,
+          size: 25,
+        ),
+        isDismissible: true,
+        margin: const EdgeInsets.all(12),
+        maxWidth: double.infinity);
   }
 }

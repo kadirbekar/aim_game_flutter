@@ -1,0 +1,16 @@
+{
+    "json.schemas": [
+    
+    ],
+    "[jsonc]": {
+
+        "editor.quickSuggestions": {
+            "strings": true
+        },
+        "editor.suggest.insertMode": "replace"
+    },
+    "[dart]": {
+		"editor.formatOnSave": false,
+		"editor.formatOnType": false,
+	}
+}

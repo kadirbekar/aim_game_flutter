@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 
+import '../../core/constants/image_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../core/constants/image_constants.dart';
 import '../../core/reusable_widgets/alert_dialog.dart';
 import '../../core/reusable_widgets/label_text.dart';
 import 'home_page.dart';
@@ -24,22 +23,21 @@ class GamePage extends StatefulWidget {
   _GamePageState createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage> {
+class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin {
   double width = 96;
   double height = 96;
   Color color = Colors.green;
   BorderRadius borderRadius = BorderRadius.circular(8);
-  double fontSize = 16.0;
-  Color fontColor = Colors.red;
   List<AlignmentGeometry> positions;
   Alignment alignment;
   Random random;
   int point = 0;
   Timer timer;
-  Timer changeTargetPosition;
   bool startAnimationButtonVisible = true;
   final randomInt = 256;
   int endTime;
+  AnimationController _animationController;
+  Animation _animation;
 
   @override
   void initState() {
@@ -48,6 +46,34 @@ class _GamePageState extends State<GamePage> {
     initializePositions();
     alignment = positions[6];
     endTime = widget.gameEndTime;
+
+    _animationController = AnimationController(
+        duration: Duration(
+          milliseconds: widget.targetMovementSpeed,
+        ),
+        vsync: this);
+
+    _animation = Tween<double>(begin: -1, end: 1).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.bounceIn,
+        reverseCurve: Curves.bounceOut
+      ),
+    )
+      ..addListener(() {
+        setState(() {
+          
+        });
+      })
+      ..addStatusListener((AnimationStatus status) {
+        if (status == AnimationStatus.completed) {
+          _animationController.reverse();
+          alignment = positions[random.nextInt(9).toInt()];
+        } else if (status == AnimationStatus.dismissed) {
+          _animationController.forward();
+          alignment = positions[random.nextInt(9).toInt()];
+        }
+      });
   }
 
   //set aim box positions
@@ -66,15 +92,12 @@ class _GamePageState extends State<GamePage> {
   }
 
   startAnimation() {
-    timer = Timer.periodic(Duration(milliseconds: widget.targetMovementSpeed),(timer) {
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (timer.tick != widget.gameEndTime) {
         setState(() {
           endTime--;
-
-          alignment = positions[random.nextInt(6).toInt()];
-
-          width = random.nextInt(300).toDouble();
-          height = random.nextInt(300).toDouble();
+          width = 80;
+          height = 80;
 
           color = Color.fromRGBO(
             random.nextInt(randomInt),
@@ -83,20 +106,12 @@ class _GamePageState extends State<GamePage> {
             1,
           );
 
-          borderRadius = BorderRadius.circular(random.nextInt(25).toDouble());
-
-          fontSize = random.nextInt(30).toDouble();
-
-          fontColor = Color.fromRGBO(
-            random.nextInt(randomInt),
-            random.nextInt(randomInt),
-            random.nextInt(randomInt),
-            1,
-          );
+          borderRadius = BorderRadius.circular(random.nextInt(12).toDouble());
         });
       } else {
-        _showResultDialog();
         timer.cancel();
+        _showResultDialog();
+        _animationController.stop();
       }
     });
   }
@@ -104,6 +119,7 @@ class _GamePageState extends State<GamePage> {
   @override
   void dispose() {
     super.dispose();
+    _animationController.dispose();
   }
 
   @override
@@ -114,21 +130,19 @@ class _GamePageState extends State<GamePage> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
           appBar: AppBar(
+            centerTitle: false,
             backgroundColor: Colors.teal,
             title: LabelText(
               text: widget.userName,
             ),
             actions: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
+                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    LabelText(text: "Total Point : $point"),
-                    LabelText(
-                      text: "Game end time : $endTime",
-                    ),
+                     LabelText(text: "Total Point : $point"),
+                     LabelText(text: "Game end time : $endTime"),
                   ],
                 ),
               ),
@@ -138,9 +152,7 @@ class _GamePageState extends State<GamePage> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               if (!startAnimationButtonVisible) stopAnimation,
-              const SizedBox(
-                height: 15,
-              ),
+              const SizedBox(height: 15),
               if (startAnimationButtonVisible) startGame,
             ],
           ),
@@ -170,13 +182,6 @@ class _GamePageState extends State<GamePage> {
         ),
       );
 
-  Widget get aimBoxText => Container(
-        child: Image.asset(
-          ImageConstants.TARGET,
-          fit: BoxFit.cover,
-        ),
-      );
-
   Widget get stopAnimation => FloatingActionButton.extended(
         heroTag: 'stop',
         backgroundColor: Colors.red,
@@ -187,15 +192,18 @@ class _GamePageState extends State<GamePage> {
         onPressed: () {
           timer.cancel();
           _showResultDialog();
+          _animationController.stop();
         },
         label: const LabelText(text: 'Stop'),
       );
 
   Widget get startGame => FloatingActionButton.extended(
+        backgroundColor: Colors.teal,
         heroTag: 'start',
         onPressed: () {
-          startAnimation();
-          startAnimationButtonVisible = false;
+            startAnimation();
+            startAnimationButtonVisible = false;
+            _animationController.forward();
         },
         label: const LabelText(
           text: 'Start',
@@ -203,17 +211,24 @@ class _GamePageState extends State<GamePage> {
         icon: const Icon(Icons.play_circle_filled),
       );
 
-  Widget get aimGameBox => AnimatedContainer(
-        child: aimBoxText,
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: borderRadius,
-        ),
-        duration: Duration(seconds: widget.targetMovementSpeed),
-        curve: Curves.easeIn,
-      );
+  Widget get aimGameBox => Transform.rotate(
+    angle: _animation.value,
+      child: AnimatedContainer(
+    child: Image.asset(
+      ImageConstants.TARGET,
+      fit: BoxFit.cover,
+    ),
+    width: width,
+    padding: const EdgeInsets.all(6),
+    height: height,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: borderRadius,
+    ),
+    duration: Duration(milliseconds: widget.targetMovementSpeed),
+    curve: Curves.easeIn,
+      ),
+  );
 
   _showResultDialog() {
     ShowCustomDialogBox.showAlertDialogWithAction(

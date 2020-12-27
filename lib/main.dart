@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'core/constants/app_constants.dart';
 import 'core/constants/route_constants.dart';
 import 'core/services/navigation_service.dart';
 
@@ -11,8 +12,8 @@ void main() async {
   await GetStorage.init();
 
   final storage = GetStorage();
-  if (await storage.read("theme") == null) {
-    await storage.write("theme", false);
+  if (await storage.read(ApplicationConstants.APP_THEME) == null) {
+    await storage.write(ApplicationConstants.APP_THEME, false);
   }
 
   //remove status bar
@@ -29,7 +30,8 @@ void main() async {
         getPages: AppRoutes.routes,
         debugShowCheckedModeBanner: false,
         initialRoute: RouteConstants.HOME_PAGE,
-        theme: storage.read("theme") == false ? ThemeData.light() : ThemeData.dark()
-      ),
+        theme: storage.read(ApplicationConstants.APP_THEME) == false
+            ? ThemeData.light()
+            : ThemeData.dark()),
   );
 }
